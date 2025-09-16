@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>회원가입</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* 💙 Blue Theme */
+        [data-bs-theme="blue"] {
+        --bs-body-bg: #e7f0ff;
+        --bs-body-color: #0d3b66;
+        --bs-primary: #1d4ed8;
+        --bs-secondary: #60a5fa;
+        --bs-link-color: #1e40af;
+        --bs-border-color: #93c5fd;
+        }
+
+        /* 💚 Green Theme */
+        [data-bs-theme="green"] {
+        --bs-body-bg: #ecfdf5;
+        --bs-body-color: #064e3b;
+        --bs-primary: #10b981;
+        --bs-secondary: #6ee7b7;
+        --bs-link-color: #047857;
+        --bs-border-color: #a7f3d0;
+        }
+
+        /* 🩷 Pink Theme */
+        [data-bs-theme="pink"] {
+        --bs-body-bg: #fff0f6;
+        --bs-body-color: #5a1034;
+        --bs-primary: #d63384;
+        --bs-secondary: #f783ac;
+        --bs-link-color: #c2255c;
+        --bs-border-color: #f5c2e7;
+        }
+
+  </style>
+</head>
+  <body class="bg-light d-flex justify-content-center align-items-center min-vh-100">
+    <div class="container" style="max-width: 600px;">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="mb-4 text-center">회원가입</h2>
+          <div class="d-flex align-items-center mb-2">
+            <h6 class="me-2 mb-0">Mode</h6>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary theme-btn btn-sm" data-theme="light">☀️</button>
+                <button class="btn btn-outline-dark theme-btn btn-sm" data-theme="dark">🌙</button>
+                <button class="btn btn-outline-primary theme-btn btn-sm" data-theme="blue">💙</button>
+                <button class="btn btn-outline-success theme-btn btn-sm" data-theme="green">💚</button>
+                <button class="btn btn-outline-danger theme-btn btn-sm" data-theme="pink">🩷</button>
+            </div>
+
+        </div>
+          
+          <form id="signupForm">
+            <!-- 아이디 -->
+            <div class="mb-3">
+              <label for="inputId" class="form-label">아이디</label>
+              <input type="text" class="form-control" id="inputId" placeholder="아이디" required>
+            </div>
+            
+            <!-- 비밀번호 -->
+            <div class="mb-3">
+              <label for="inputPw" class="form-label">비밀번호</label>
+              <input type="password" class="form-control mb-2" id="inputPw" placeholder="비밀번호" required>
+              <input type="password" class="form-control" id="inputPwConfirm" placeholder="비밀번호 확인" required>
+              <div class="form-text">* 영문, 숫자, 특수문자를 포함한 8자 이상 30자 미만</div>
+            </div>
+            
+            <!-- 이름 -->
+            <div class="mb-3">
+              <label for="inputName" class="form-label">이름</label>
+              <input type="text" class="form-control" id="inputName" placeholder="이름" required>
+            </div>
+            
+            <!-- 전화번호 -->
+            <div class="mb-3">
+              <label for="inputNumber" class="form-label">전화번호</label>
+              <input type="text" class="form-control" id="inputNumber" required pattern="^[0-9]{10,11}$" placeholder="숫자만 입력">
+            </div>
+            
+            <!-- 성별 -->
+            <div class="mb-3">
+              <label class="form-label d-block">성별</label>
+              <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="gender" id="male" value="남" checked>
+                <label class="btn btn-outline-primary" for="male">남</label>
+                <input type="radio" class="btn-check" name="gender" id="female" value="여">
+                <label class="btn btn-outline-danger" for="female">여</label>
+              </div>
+            </div>
+            
+            <!-- 이메일 -->
+            <div class="mb-4">
+              <label for="inputEmail" class="form-label">이메일</label>
+              <input type="email" class="form-control" id="inputEmail"  placeholder="이메일" required>
+            </div>
+            
+            <!-- 버튼 -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">가입하기</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 가입 완료 Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">회원가입 완료 🎉</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>아이디:</strong> <span id="resultId"></span></p>
+            <p><strong>이름:</strong> <span id="resultName"></span></p>
+            <p><strong>전화번호:</strong> <span id="resultNumber"></span></p>
+            <p><strong>성별:</strong> <span id="resultGender"></span></p>
+            <p><strong>이메일:</strong> <span id="resultEmail"></span></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal">확인</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const form = document.getElementById("signupForm");
+      const modal = new bootstrap.Modal(document.getElementById("successModal"));
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById("inputId").value.trim();
+        const pw = document.getElementById("inputPw").value;
+        const pwConfirm = document.getElementById("inputPwConfirm").value;
+        const name = document.getElementById("inputName").value.trim();
+        const number = document.getElementById("inputNumber").value.trim();
+        const email = document.getElementById("inputEmail").value.trim();
+        const gender = document.querySelector("input[name='gender']:checked").value;
+
+        // 비밀번호 유효성 검사
+        const pwRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,30}$/;
+        if (!pwRegex.test(pw)) {
+          alert("비밀번호는 영문, 숫자, 특수문자를 포함한 8~30자리여야 합니다.");
+          return;
+        }
+        if (pw !== pwConfirm) {
+          alert("비밀번호가 일치하지 않습니다.");
+          return;
+        }
+
+        // 전화번호 유효성 검사
+        const numberRegex = /^[0-9]{10,11}$/;
+        if (!numberRegex.test(number)) {
+          alert("전화번호는 숫자만 10~11자리 입력해주세요.");
+          return;
+        }
+
+        // 이메일 유효성은 input[type=email]이 자동으로 검사
+
+        // 값 채워 넣기
+        document.getElementById("resultId").textContent = id;
+        document.getElementById("resultName").textContent = name;
+        document.getElementById("resultNumber").textContent = number;
+        document.getElementById("resultGender").textContent = gender;
+        document.getElementById("resultEmail").textContent = email;
+
+        // 모달 열기
+        modal.show();
+      });
+
+      // 모드변경
+    const root = document.documentElement;
+    document.querySelectorAll(".theme-btn").forEach(btn=>{
+      btn.onclick=()=>root.setAttribute("data-bs-theme",btn.dataset.theme);
+    });
+    </script>
+  </body>
+</html>

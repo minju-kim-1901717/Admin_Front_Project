@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Admin Page</title>
+  <style>
+        /* 💙 Blue Theme */
+        [data-bs-theme="blue"] {
+          --bs-body-bg: #e7f0ff;
+          --bs-body-color: #0d3b66;
+          --bs-primary: #1d4ed8;
+          --bs-secondary: #60a5fa;
+          --bs-link-color: #1e40af;
+          --bs-border-color: #93c5fd;
+        }
+
+        /* 💚 Green Theme */
+        [data-bs-theme="green"] {
+          --bs-body-bg: #ecfdf5;
+          --bs-body-color: #064e3b;
+          --bs-primary: #10b981;
+          --bs-secondary: #6ee7b7;
+          --bs-link-color: #047857;
+          --bs-border-color: #a7f3d0;
+        }
+
+        /* 🩷 Pink Theme */
+        [data-bs-theme="pink"] {
+          --bs-body-bg: #fff0f6;
+          --bs-body-color: #5a1034;
+          --bs-primary: #d63384;
+          --bs-secondary: #f783ac;
+          --bs-link-color: #c2255c;
+          --bs-border-color: #f5c2e7;
+        }
+  </style>
+</head>
+<body>
+  <div class="container mt-3">
+    <div class="row align-items-start">
+      <!-- 왼쪽 상단 -->
+      <div class="col-md-8">
+        <h3 class="mt-5 mb-3">신규 등록 상품</h3>
+      </div>
+
+      <!-- 오른쪽 상단 -->
+      <div class="col-md-4 d-flex flex-column align-items-end">
+        <!-- now time -->
+        <div id="currentTime" class="text-end small text-muted"></div>
+        <!-- signin btn -->
+         <button onclick="openPopup()" class="btn active btn-sm my-1">  회원가입 </button>
+        <!-- mode change btn -->
+        <div class="d-flex align-items-center mb-2">
+          <h6 class="me-2 mb-0">Mode</h6>
+          <div class="btn-group">
+            <button class="btn btn-outline-secondary theme-btn btn-sm" data-theme="light">☀️</button>
+            <button class="btn btn-outline-dark theme-btn btn-sm" data-theme="dark">🌙</button>
+            <button class="btn btn-outline-primary theme-btn btn-sm" data-theme="blue">💙</button>
+            <button class="btn btn-outline-success theme-btn btn-sm" data-theme="green">💚</button>
+            <button class="btn btn-outline-danger theme-btn btn-sm" data-theme="pink">🩷</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 필터링 폼 -->
+    <form class="row row-cols-lg-auto g-3 align-items-center">
+      <!-- 카테고리 -->
+      <div class="col-12">
+        <select class="form-select" id="categoryFilter" name="category_data_table">
+          <option value="">카테고리</option>
+          <option value="상의">상의</option>
+          <option value="하의">하의</option>
+          <option value="신발">신발</option>
+          <option value="패션잡화">패션잡화</option>
+        </select>
+      </div>
+
+      <!-- 성별 -->
+        <div class="col d-flex align-items-center">
+        <div class="form-check form-switch me-3">
+            <input class="form-check-input" type="checkbox" id="genderMale" value="남">
+            <label class="form-check-label" for="genderMale">남성</label>
+        </div>
+        <div class="form-check form-switch me-3">
+            <input class="form-check-input" type="checkbox" id="genderFemale" value="여">
+            <label class="form-check-label" for="genderFemale">여성</label>
+        </div>
+        </div>
+
+
+      <!-- 검색 -->
+      <div class="col-3">
+        <input id="searchInput" class="form-control" type="text" placeholder="제품명을 입력해주세요">
+      </div>
+    </form>
+
+    <!-- 제품 테이블 -->
+    <div class="container mt-3">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>카테고리</th>
+            <th>브랜드</th>
+            <th>상품명</th>
+            <th>가격</th>
+            <th>성별</th>
+          </tr>
+        </thead>
+        <tbody id="product_data_Table">
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-2">
+    <select id="pageSize" class="form-select form-select-sm" style="width:auto">
+        <option value="10" selected>10개</option><option value="20">20개</option><option value="50">50개</option>
+    </select>
+    <ul class="pagination pagination-sm mb-0" id="pager"></ul>
+    </div>
+
+  </div>
+<script>
+  // ========= 전역 상태 =========
+  let product_data = [];
+  let filtered = [];
+  let currentPage = 1;
+  let pageSize = 10;
+
+  //  유틸 
+  const formatPrice = (p) => new Intl.NumberFormat('ko-KR').format(Number(p) || 0);
+
+  //  테이블 렌더 
+  function renderTable(data){
+    const tbody = document.getElementById("product_data_Table");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    data.forEach(item=>{
+      const row = tbody.insertRow();
+      row.insertCell(0).innerText = item.category ?? "";
+      row.insertCell(1).innerText = item.brand ?? "";
+      row.insertCell(2).innerText = item.product ?? "";
+      row.insertCell(3).innerText = formatPrice(item.price);
+      row.insertCell(4).innerText = item.gender ?? "공용";
+    });
+  }
+
+  //  페이지네이션 
+  function renderPaged(){
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    currentPage = Math.min(currentPage, totalPages);
+
+    const start = (currentPage - 1) * pageSize;
+    const pageItems = filtered.slice(start, start + pageSize);
+
+    renderTable(pageItems);
+    renderPager(totalPages);
+
+    const totalEl = document.getElementById("totalCount");
+    if (totalEl) totalEl.innerText = `총 ${total.toLocaleString()}개`;
+  }
+
+  // 페이지네이션
+  function renderPager(totalPages){
+    const pager = document.getElementById("pager");
+    if (!pager) return;
+    pager.innerHTML = "";
+
+    const makeLi = (label, page, disabled=false, active=false) => {
+      const li = document.createElement("li");
+      li.className = `page-item ${disabled?'disabled':''} ${active?'active':''}`;
+      const a = document.createElement("a");
+      a.className = "page-link"; a.href = "#"; a.textContent = label;
+      a.onclick = (e)=>{ e.preventDefault(); if(!disabled && !active){ currentPage = page; renderPaged(); } };
+      li.appendChild(a); return li;
+    };
+    const addDots = () => {
+      const li = document.createElement("li");
+      li.className = "page-item disabled";
+      li.innerHTML = `<span class="page-link">…</span>`;
+      pager.appendChild(li);
+    };
+
+    const windowSize = 7;
+    const half = Math.floor(windowSize / 2);
+    let start = Math.max(1, currentPage - half);
+    let end = Math.min(totalPages, start + windowSize - 1);
+    start = Math.max(1, end - windowSize + 1);
+
+    // 이전
+    pager.appendChild(makeLi("«", Math.max(1, currentPage-1), currentPage===1));
+
+    // 첫 페이지 + 앞쪽 점
+    if (start > 1) {
+      pager.appendChild(makeLi("1", 1, false, currentPage===1));
+      if (start > 2) addDots();
+    }
+
+    // 가운데 창
+    for (let p = start; p <= end; p++) {
+      pager.appendChild(makeLi(String(p), p, false, p===currentPage));
+    }
+
+    // 뒤쪽 점 + 마지막 페이지
+    if (end < totalPages) {
+      if (end < totalPages - 1) addDots();
+      pager.appendChild(makeLi(String(totalPages), totalPages, false, currentPage===totalPages));
+    }
+
+    // 다음
+    pager.appendChild(makeLi("»", Math.min(totalPages, currentPage+1), currentPage===totalPages));
+  }
+
+  //  필터 
+  function applyFilters(){
+    const category = document.getElementById("categoryFilter").value;
+    const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+
+    const genderFilters = [];
+    if (document.getElementById("genderMale").checked) genderFilters.push("남");
+    if (document.getElementById("genderFemale").checked) genderFilters.push("여");
+
+    filtered = product_data.filter(item=>{
+      const catOk = category ? item.category === category : true;
+      const genVal = item.gender ?? "공용";
+      const genOk = genderFilters.length > 0 ? genderFilters.includes(genVal) : true;
+      const name = (item.product ?? "").toLowerCase();
+      const brand = (item.brand ?? "").toLowerCase();
+      const kwOk = name.includes(keyword) || brand.includes(keyword);
+      return catOk && genOk && kwOk;
+    });
+
+    currentPage = 1;
+    renderPaged();
+  }
+
+  //  데이터 로드 
+  async function loadProducts() {
+    try {
+      const res = await fetch("products.json?nocache=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+
+      // 키 정규화
+      product_data = raw.map(it => ({
+        category: it.category ?? "",
+        brand: it.brand ?? "",
+        product: (it.product ?? it.product_name ?? ""),
+        price: Number(it.price ?? 0),
+        gender: it.gender ?? "공용",
+      }));
+
+      filtered = product_data;
+      currentPage = 1;
+      renderPaged();
+      console.log("loaded items:", product_data.length);
+    } catch (e) {
+      console.error("상품 로드 실패:", e);
+      alert("products.json을 불러오지 못했어요. 경로/서버를 확인해주세요.");
+    }
+  }
+
+  //  초기화 
+  document.addEventListener("DOMContentLoaded", () => {
+    // 필터 이벤트
+    document.getElementById("categoryFilter").addEventListener("change", applyFilters);
+    document.getElementById("genderMale").addEventListener("change", applyFilters);
+    document.getElementById("genderFemale").addEventListener("change", applyFilters);
+    document.getElementById("searchInput").addEventListener("input", applyFilters);
+
+    // 페이지 사이즈 
+    const sizeSel = document.getElementById("pageSize");
+    if (sizeSel) {
+      pageSize = parseInt(sizeSel.value, 10) || 10;
+      sizeSel.addEventListener("change", (e)=>{
+        pageSize = parseInt(e.target.value, 10) || 10;
+        currentPage = 1;
+        renderPaged();
+      });
+    }
+
+    // 시계
+    function updateTime(){ document.getElementById("currentTime").innerText = new Date().toLocaleString(); }
+    updateTime(); setInterval(updateTime, 1000);
+
+    // 테마
+    const root = document.documentElement;
+    document.querySelectorAll(".theme-btn").forEach(btn=>{
+      btn.onclick = ()=> root.setAttribute("data-bs-theme", btn.dataset.theme);
+    });
+
+    // 데이터 로드
+    loadProducts();
+  });
+
+  // 회원가입 팝업 
+  function openPopup(){
+    const popupUrl = './signin.html';
+    const windowName = 'popupWindow';
+    const windowFeatures = 'width=800, height=1000';
+    window.open(popupUrl, windowName, windowFeatures);
+  }
+  window.openPopup = openPopup;
+</script>
+</body>
+</html>
